@@ -7,7 +7,6 @@ import {
 	Alert,
 	Checkbox,
 	CircularProgress,
-	TextField,
 } from '@mui/material';
 import { useItemsMutation } from '../../hooks/useItemsMutation';
 import AdminLayout from '../layout/AdminLayout';
@@ -89,6 +88,7 @@ function AdminDashboardComponent() {
 		},
 		{
 			title: 'Created At',
+			defaultSort: 'desc',
 			field: 'createdAt',
 			render: (rowData) => formatDate(rowData.createdAt),
 			editable: 'never',
@@ -222,17 +222,21 @@ function AdminDashboardComponent() {
 				...oldData,
 				...newData,
 				claimedBy: Array.isArray(newData.claimedBy)
-						? newData.claimedBy
-						: newData.claimedBy
-						? newData.claimedBy.split(',').map(item => item.trim()).filter(Boolean)
-						: [],
+					? newData.claimedBy
+					: newData.claimedBy
+					? newData.claimedBy
+							.split(',')
+							.map((item) => item.trim())
+							.filter(Boolean)
+					: [],
 				foundDate: newData.foundDate
-					? (newData.foundDate instanceof Date
+					? newData.foundDate instanceof Date
 						? format(newData.foundDate, 'yyyy-MM-dd')
-						: newData.foundDate)
+						: newData.foundDate
 					: oldData.foundDate,
 				createdAt: oldData.createdAt,
-				image: newData.image instanceof File ? newData.image : undefined
+				image:
+					newData.image instanceof File ? newData.image : undefined,
 			};
 
 			delete updatedItem.tableData;
@@ -280,7 +284,7 @@ function AdminDashboardComponent() {
 						margin: '0 auto',
 					}}
 				>
-					<Paper style={{ overflow: 'auto', maxHeight: '80vh' }}>
+					<Paper>
 						{isLoading || isFetching ? (
 							<div
 								style={{
@@ -356,6 +360,7 @@ function AdminDashboardComponent() {
 										whiteSpace: 'nowrap',
 										padding: '8px 16px',
 									},
+									maxBodyHeight: '61.3vh', // Set max body height to restrict content scrolling
 								}}
 								components={{
 									Container: (props) => (
@@ -364,24 +369,24 @@ function AdminDashboardComponent() {
 											style={{ maxHeight: '100%' }}
 										/>
 									),
-									OverlayLoading: props => (
-										<div style={{
-											display: 'flex',
-											justifyContent: 'center',
-											alignItems: 'center',
-											height: '100%',
-											width: '100%',
-											position: 'absolute',
-											top: 0,
-											left: 0,
-											backgroundColor: 'rgba(255, 255, 255, 0.7)',
-										}}>
+									OverlayLoading: (props) => (
+										<div
+											style={{
+												display: 'flex',
+												justifyContent: 'center',
+												alignItems: 'center',
+												height: '100%',
+												width: '100%',
+												position: 'absolute',
+												top: 0,
+												left: 0,
+												backgroundColor:
+													'rgba(255, 255, 255, 0.7)',
+											}}
+										>
 											<CircularProgress />
 										</div>
 									),
-								}}
-								style={{
-									width: '100%',
 								}}
 								isLoading={isSubmitting}
 							/>

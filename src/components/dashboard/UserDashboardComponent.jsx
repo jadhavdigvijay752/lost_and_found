@@ -29,7 +29,7 @@ import {
 	Stepper,
 	Step,
 	StepLabel,
-	Paper
+	Paper,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import LogoutIcon from '@mui/icons-material/Logout';
@@ -42,13 +42,16 @@ import InputAdornment from '@mui/material/InputAdornment';
 import AssignmentTurnedInIcon from '@mui/icons-material/AssignmentTurnedIn';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import { keyframes } from '@emotion/react';
+import CloseIcon from '@mui/icons-material/Close';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 
 /**
  * Component for displaying and managing user dashboard items.
  * @returns {JSX.Element} The rendered UserDashboardComponent
  */
 function UserDashboardComponent() {
-	const { useItemsQuery, claimItem, unclaimItem, addItemUsers } = useItemsMutation();
+	const { useItemsQuery, claimItem, unclaimItem, addItemUsers } =
+		useItemsMutation();
 	const { data: items = [], isLoading, error } = useItemsQuery();
 	const { user, logout } = useAuth();
 	const [searchTerm, setSearchTerm] = useState('');
@@ -66,37 +69,59 @@ function UserDashboardComponent() {
 		color: '',
 		size: '',
 		foundDate: '',
-		image: null
+		image: null,
+	});
+	const [fullImageDialog, setFullImageDialog] = useState({
+		open: false,
+		imageUrl: '',
+		itemName: '',
 	});
 
 	const filteredItems = useMemo(() => {
-		return items.filter((item) => {
-			const isClaimedByCurrentUser = Array.isArray(item.claimedBy) &&
-				item.claimedBy.includes(user?.displayName || user?.email);
-			
-			const searchFields = [
-				item.name,
-				item.description,
-				item.color,
-				item.foundLocation,
-				item.dropOffLocation
-			];
+		return items
+			.filter((item) => {
+				console.log(item);
+				const isClaimedByCurrentUser =
+					Array.isArray(item.claimedBy) &&
+					item.claimedBy.includes(user?.displayName || user?.email);
 
-			const matchesSearch = searchFields.some(field => 
-				field && field.toLowerCase().includes(searchTerm.toLowerCase())
-			);
+				const searchFields = [
+					item.name,
+					item.description,
+					item.color,
+					item.foundLocation,
+					item.dropOffLocation,
+				];
 
-			return (!item.isVerified || (item.isVerified && isClaimedByCurrentUser)) && matchesSearch;
-		});
+				const matchesSearch = searchFields.some(
+					(field) =>
+						field &&
+						field.toLowerCase().includes(searchTerm.toLowerCase())
+				);
+
+				return (
+					(!item.isVerified ||
+						(item.isVerified && isClaimedByCurrentUser)) &&
+					matchesSearch
+				);
+			})
+			.sort((a, b) => {
+				// Sort by createdAt timestamp, most recent first
+				const timeA = a.createdAt?.seconds || 0;
+				const timeB = b.createdAt?.seconds || 0;
+				return timeB - timeA;
+			});
 	}, [items, searchTerm, user]);
 
 	const handleClaim = async (itemId) => {
 		if (user && (user.displayName || user.email)) {
 			try {
 				const username = user.displayName || user.email;
-				const item = items.find(item => item.id === itemId);
-				const currentClaimedBy = Array.isArray(item.claimedBy) ? item.claimedBy : [];
-				
+				const item = items.find((item) => item.id === itemId);
+				const currentClaimedBy = Array.isArray(item.claimedBy)
+					? item.claimedBy
+					: [];
+
 				if (!currentClaimedBy.includes(username)) {
 					await claimItem({ itemId, username, currentClaimedBy });
 					setSnackbar({
@@ -132,9 +157,11 @@ function UserDashboardComponent() {
 		if (user && (user.displayName || user.email)) {
 			try {
 				const username = user.displayName || user.email;
-				const item = items.find(item => item.id === itemId);
-				const currentClaimedBy = Array.isArray(item.claimedBy) ? item.claimedBy : [];
-				
+				const item = items.find((item) => item.id === itemId);
+				const currentClaimedBy = Array.isArray(item.claimedBy)
+					? item.claimedBy
+					: [];
+
 				if (currentClaimedBy.includes(username)) {
 					await unclaimItem({ itemId, username, currentClaimedBy });
 					setSnackbar({
@@ -184,7 +211,7 @@ function UserDashboardComponent() {
 
 	const handleaddItemUsers = async () => {
 		const formData = new FormData();
-		Object.keys(newItem).forEach(key => {
+		Object.keys(newItem).forEach((key) => {
 			if (key === 'image' && newItem[key]) {
 				formData.append(key, newItem[key]);
 			} else {
@@ -194,7 +221,11 @@ function UserDashboardComponent() {
 
 		try {
 			await addItemUsers(formData);
-			setSnackbar({ open: true, message: 'Item added successfully', severity: 'success' });
+			setSnackbar({
+				open: true,
+				message: 'Item added successfully',
+				severity: 'success',
+			});
 			setIsAddDialogOpen(false);
 			setNewItem({
 				name: '',
@@ -204,11 +235,15 @@ function UserDashboardComponent() {
 				color: '',
 				size: '',
 				foundDate: '',
-				image: null
+				image: null,
 			});
 		} catch (error) {
 			console.error('Error adding item:', error);
-			setSnackbar({ open: true, message: 'Error adding item: ' + error.message, severity: 'error' });
+			setSnackbar({
+				open: true,
+				message: 'Error adding item: ' + error.message,
+				severity: 'error',
+			});
 		}
 	};
 
@@ -216,10 +251,27 @@ function UserDashboardComponent() {
 		setNewItem({ ...newItem, image: event.target.files[0] });
 	};
 
+	const handleImageClick = (imageUrl, itemName) => {
+		setFullImageDialog({
+			open: true,
+			imageUrl,
+			itemName,
+		});
+	};
+
+	const handleCloseFullImageDialog = () => {
+		setFullImageDialog({
+			open: false,
+			imageUrl: '',
+			itemName: '',
+		});
+	};
+
 	const renderActionButton = (item) => {
-		const isClaimedByCurrentUser = Array.isArray(item.claimedBy) &&
+		const isClaimedByCurrentUser =
+			Array.isArray(item.claimedBy) &&
 			item.claimedBy.includes(user?.displayName || user?.email);
-		
+
 		if (isClaimedByCurrentUser && item.isVerified) {
 			return (
 				<Button
@@ -305,17 +357,32 @@ function UserDashboardComponent() {
 		{
 			label: 'Search for Items',
 			description: 'Browse through the list of found items.',
-			icon: <SearchIcon sx={{ color: 'white', animation: `${pulse} 2s infinite` }} />,
+			icon: (
+				<SearchIcon
+					sx={{ color: 'white', animation: `${pulse} 2s infinite` }}
+				/>
+			),
 		},
 		{
 			label: 'Add Lost Item',
 			description: 'Report your lost item to the system.',
-			icon: <AddIcon sx={{ color: 'white', animation: `${pulse} 2s infinite` }} />,
+			icon: (
+				<AddIcon
+					sx={{ color: 'white', animation: `${pulse} 2s infinite` }}
+				/>
+			),
 		},
 		{
 			label: 'Claim Your Item',
 			description: 'If you find your lost item, claim it.',
-			icon: <AssignmentTurnedInIcon sx={{ color: 'white', animation: `${rotate} 5s linear infinite` }} />,
+			icon: (
+				<AssignmentTurnedInIcon
+					sx={{
+						color: 'white',
+						animation: `${rotate} 5s linear infinite`,
+					}}
+				/>
+			),
 		},
 	];
 
@@ -325,12 +392,13 @@ function UserDashboardComponent() {
 
 	return (
 		<div className="bg-[#e7e2ff]">
-			<AppBar 
-				className='mb-4' 
-				position="static" 
-				sx={{ 
-					background: 'linear-gradient(217.64deg, #9181F4 -5.84%, #5038ED 106.73%)',
-					color: 'white'  // White text color for better contrast against the gradient
+			<AppBar
+				className="mb-4"
+				position="static"
+				sx={{
+					background:
+						'linear-gradient(217.64deg, #9181F4 -5.84%, #5038ED 106.73%)',
+					color: 'white', // White text color for better contrast against the gradient
 				}}
 			>
 				<Toolbar>
@@ -344,7 +412,8 @@ function UserDashboardComponent() {
 					</Typography>
 					<Box sx={{ display: 'flex', alignItems: 'center' }}>
 						<Typography variant="subtitle1" sx={{ mr: 2 }}>
-							Welcome, {user?.displayName || user?.email || 'User'}
+							Welcome,{' '}
+							{user?.displayName || user?.email || 'User'}
 						</Typography>
 						<IconButton
 							color="inherit"
@@ -356,26 +425,47 @@ function UserDashboardComponent() {
 					</Box>
 				</Toolbar>
 			</AppBar>
-			<Container maxWidth="lg" sx={{ py: 8, position: 'relative', backgroundColor: '#e7e2ff' }}>
-				<Paper 
-					elevation={3} 
-					sx={{ 
-						p: 3, 
-						mb: 4, 
-						background: 'linear-gradient(45deg, #FE6B8B, #FF8E53, #8ED1FC, #0693E3, #00D084)',
+			<Container
+				maxWidth="lg"
+				sx={{ py: 8, position: 'relative', backgroundColor: '#e7e2ff' }}
+			>
+				<Paper
+					elevation={3}
+					sx={{
+						p: 3,
+						mb: 4,
+						background:
+							'linear-gradient(45deg, #FE6B8B, #FF8E53, #8ED1FC, #0693E3, #00D084)',
 						backgroundSize: '400% 400%',
 						animation: `${gradientAnimation} 15s ease infinite`,
 					}}
 				>
-					<Typography variant="h5" gutterBottom align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
+					<Typography
+						variant="h5"
+						gutterBottom
+						align="center"
+						sx={{ color: 'white', fontWeight: 'bold' }}
+					>
 						Lost it? Look No Further!
 					</Typography>
 					<Stepper activeStep={-1} alternativeLabel>
 						{steps.map((step, index) => (
 							<Step key={step.label}>
 								<StepLabel icon={step.icon}>
-									<Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 'bold', fontSize: '17px' }}>{step.label}</Typography>
-									<Typography variant="body2" sx={{ color: 'white' }}>
+									<Typography
+										variant="subtitle1"
+										sx={{
+											color: 'white',
+											fontWeight: 'bold',
+											fontSize: '17xpx',
+										}}
+									>
+										{step.label}
+									</Typography>
+									<Typography
+										variant="body2"
+										sx={{ color: 'white' }}
+									>
 										{step.description}
 									</Typography>
 								</StepLabel>
@@ -389,223 +479,456 @@ function UserDashboardComponent() {
 				</Typography>
 				<TextField
 					fullWidth
-						variant="outlined"
-						placeholder="Search items..."
-						value={searchTerm}
-						onChange={handleSearchChange}
-						sx={{ mb: 4 }}
-						InputProps={{
-							startAdornment: (
-								<InputAdornment position="start">
-									<SearchIcon />
-								</InputAdornment>
-							),
-						}}
-					/>
-					{filteredItems.length === 0 ? (
-						<Typography variant="body1" color="text.secondary">
-							No items found.
-						</Typography>
-					) : (
-						<Grid container spacing={3}>
-							{filteredItems.map((item) => (
-								<Grid item xs={12} sm={6} md={4} key={item.id}>
-									<Card
-										sx={{
-											height: '100%',
-											display: 'flex',
-											flexDirection: 'column',
-											transition: 'all 0.3s ease-in-out',
-											'&:hover': {
-												transform: 'translateY(-5px)',
-												boxShadow: '0 4px 20px 0 rgba(0,0,0,0.12)',
-											},
-										}}
-									>
-										<CardActionArea>
-											<CardMedia
-												component="div"
-												sx={{
-													height: 200,
-													backgroundColor: 'grey.200',
-													display: 'flex',
-													alignItems: 'center',
-													justifyContent: 'center',
-												}}
-											>
-												{item.imageUrl ? (
+					variant="outlined"
+					placeholder="Search items..."
+					value={searchTerm}
+					onChange={handleSearchChange}
+					sx={{ mb: 4 }}
+					InputProps={{
+						startAdornment: (
+							<InputAdornment position="start">
+								<SearchIcon />
+							</InputAdornment>
+						),
+					}}
+				/>
+				{filteredItems.length === 0 ? (
+					<Typography variant="body1" color="text.secondary">
+						No items found.
+					</Typography>
+				) : (
+					<Grid container spacing={3}>
+						{filteredItems.map((item) => (
+							<Grid item xs={12} sm={6} md={4} key={item.id}>
+								<Card
+									sx={{
+										height: '100%',
+										display: 'flex',
+										flexDirection: 'column',
+										transition: 'all 0.3s ease-in-out',
+										'&:hover': {
+											transform: 'translateY(-5px)',
+											boxShadow:
+												'0 4px 20px 0 rgba(0,0,0,0.12)',
+										},
+									}}
+								>
+									<CardActionArea>
+										<CardMedia
+											component="div"
+											sx={{
+												height: 200,
+												backgroundColor: 'grey.200',
+												display: 'flex',
+												alignItems: 'center',
+												justifyContent: 'center',
+												cursor: 'pointer',
+												position: 'relative',
+												'&:hover .zoom-overlay': {
+													opacity: 1,
+												},
+											}}
+											onClick={() => handleImageClick(item.imageUrl, item.name)}
+										>
+											{item.imageUrl ? (
+												<>
 													<img
 														src={item.imageUrl}
 														alt={item.name}
-														style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+														style={{
+															width: '100%',
+															height: '100%',
+															objectFit: 'cover',
+														}}
 													/>
-												) : (
-													<ImageIcon sx={{ fontSize: 60, color: 'grey.400' }} />
-												)}
-											</CardMedia>
-											<CardContent sx={{ flexGrow: 1, height: 280 }}>
-												<Typography gutterBottom variant="h6" component="h2" noWrap>
-													{item.name}
+													<Box
+														className="zoom-overlay"
+														sx={{
+															position: 'absolute',
+															top: 0,
+															left: 0,
+															width: '100%',
+															height: '100%',
+															backgroundColor: 'rgba(0, 0, 0, 0.5)',
+															display: 'flex',
+															alignItems: 'center',
+															justifyContent: 'center',
+															opacity: 0,
+															transition: 'opacity 0.3s',
+														}}
+													>
+														<FullscreenIcon sx={{ color: 'white', fontSize: 40 }} />
+													</Box>
+												</>
+											) : (
+												<ImageIcon
+													sx={{
+														fontSize: 60,
+														color: 'grey.400',
+													}}
+												/>
+											)}
+										</CardMedia>
+										<CardContent
+											sx={{ flexGrow: 1, height: 280 }}
+										>
+											<Typography
+												gutterBottom
+												variant="h6"
+												component="h2"
+												noWrap
+											>
+												{item.name}
+											</Typography>
+											<Typography
+												variant="body2"
+												color="text.secondary"
+												sx={{
+													mb: 2,
+													height: '2.5em',
+													overflow: 'hidden',
+													textOverflow: 'ellipsis',
+												}}
+											>
+												{item.description}
+											</Typography>
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center',
+													mb: 1,
+												}}
+											>
+												<LocationOnIcon
+													sx={{
+														color: 'primary.main',
+														mr: 1,
+														fontSize: 20,
+													}}
+												/>
+												<Typography
+													variant="body2"
+													color="text.primary"
+													noWrap
+												>
+													Found at:{' '}
+													{item.foundLocation ||
+														'Not specified'}
 												</Typography>
-												<Typography variant="body2" color="text.secondary" sx={{ mb: 2, height: '2.5em', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-													{item.description}
+											</Box>
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center',
+													mb: 1,
+												}}
+											>
+												<LocationOnIcon
+													sx={{
+														color: 'secondary.main',
+														mr: 1,
+														fontSize: 20,
+													}}
+												/>
+												<Typography
+													variant="body2"
+													color="text.primary"
+													noWrap
+												>
+													Drop-off:{' '}
+													{item.dropOffLocation ||
+														'Not specified'}
 												</Typography>
-												<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-													<LocationOnIcon sx={{ color: 'primary.main', mr: 1, fontSize: 20 }} />
-													<Typography variant="body2" color="text.primary" noWrap>
-														Found at: {item.foundLocation || 'Not specified'}
-													</Typography>
-												</Box>
-												<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-													<LocationOnIcon sx={{ color: 'secondary.main', mr: 1, fontSize: 20 }} />
-													<Typography variant="body2" color="text.primary" noWrap>
-														Drop-off: {item.dropOffLocation || 'Not specified'}
-													</Typography>
-												</Box>
-												<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-													<ColorLensIcon sx={{ color: 'error.main', mr: 1, fontSize: 20 }} />
-													<Typography variant="body2" color="text.primary" noWrap>
-														Color: {item.color || 'Not specified'}
-													</Typography>
-												</Box>
-												<Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-													<StraightenIcon sx={{ color: 'info.main', mr: 1, fontSize: 20 }} />
-													<Typography variant="body2" color="text.primary" noWrap>
-														Size: {item.size || 'Not specified'}
-													</Typography>
-												</Box>
-												{Array.isArray(item?.claimedBy) && item.claimedBy.length > 0 && (
+											</Box>
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center',
+													mb: 1,
+												}}
+											>
+												<ColorLensIcon
+													sx={{
+														color: 'error.main',
+														mr: 1,
+														fontSize: 20,
+													}}
+												/>
+												<Typography
+													variant="body2"
+													color="text.primary"
+													noWrap
+												>
+													Color:{' '}
+													{item.color ||
+														'Not specified'}
+												</Typography>
+											</Box>
+											<Box
+												sx={{
+													display: 'flex',
+													alignItems: 'center',
+													mb: 1,
+												}}
+											>
+												<StraightenIcon
+													sx={{
+														color: 'info.main',
+														mr: 1,
+														fontSize: 20,
+													}}
+												/>
+												<Typography
+													variant="body2"
+													color="text.primary"
+													noWrap
+												>
+													Size:{' '}
+													{item.size ||
+														'Not specified'}
+												</Typography>
+											</Box>
+											{Array.isArray(item?.claimedBy) &&
+												item.claimedBy.length > 0 && (
 													<Box sx={{ mt: 2 }}>
-														<Typography variant="body2" color="text.secondary">
+														<Typography
+															variant="body2"
+															color="text.secondary"
+														>
 															Claimed by:
 														</Typography>
-														<Box 
-															sx={{ 
-																display: 'flex', 
-																overflowX: 'auto', 
-																'&::-webkit-scrollbar': { height: 6 },
-																'&::-webkit-scrollbar-track': { backgroundColor: 'grey.200' },
-																'&::-webkit-scrollbar-thumb': { backgroundColor: 'grey.400', borderRadius: 3 },
+														<Box
+															sx={{
+																display: 'flex',
+																overflowX:
+																	'auto',
+																'&::-webkit-scrollbar':
+																	{
+																		height: 6,
+																	},
+																'&::-webkit-scrollbar-track':
+																	{
+																		backgroundColor:
+																			'grey.200',
+																	},
+																'&::-webkit-scrollbar-thumb':
+																	{
+																		backgroundColor:
+																			'grey.400',
+																		borderRadius: 3,
+																	},
 															}}
 														>
-															{item.claimedBy.map((claimer, index) => (
-																<Chip 
-																	key={index} 
-																	label={claimer} 
-																	size="small" 
-																	color="primary" 
-																	variant="outlined" 
-																	sx={{ mr: 1, my: 1, flexShrink: 0 }}
-																/>
-															))}
+															{item.claimedBy.map(
+																(
+																	claimer,
+																	index
+																) => (
+																	<Chip
+																		key={
+																			index
+																		}
+																		label={
+																			claimer
+																		}
+																		size="small"
+																		color="primary"
+																		variant="outlined"
+																		sx={{
+																			mr: 1,
+																			my: 1,
+																			flexShrink: 0,
+																		}}
+																	/>
+																)
+															)}
 														</Box>
 													</Box>
 												)}
-											</CardContent>
-										</CardActionArea>
-										<CardActions sx={{ justifyContent: 'center', p: 2, mt: 'auto' }}>
-											{renderActionButton(item)}
-										</CardActions>
-									</Card>
-								</Grid>
-							))}
-						</Grid>
-					)}
-					<Fab 
-						color="primary" 
-						aria-label="add" 
-						style={{ position: 'fixed', bottom: 20, right: 20 }}
-						onClick={() => setIsAddDialogOpen(true)}
-					>
-						<AddIcon />
-					</Fab>
-					<Dialog open={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)}>
-						<DialogTitle>Add New Item</DialogTitle>
-						<DialogContent>
-							<TextField
-								autoFocus
-								margin="dense"
-								label="Name"
-								fullWidth
-								value={newItem.name}
-								onChange={(e) => setNewItem({ ...newItem, name: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Description"
-								fullWidth
-								multiline
-								rows={3}
-								value={newItem.description}
-								onChange={(e) => setNewItem({ ...newItem, description: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Found Location"
-								fullWidth
-								value={newItem.foundLocation}
-								onChange={(e) => setNewItem({ ...newItem, foundLocation: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Drop-off Location"
-								fullWidth
-								value={newItem.dropOffLocation}
-								onChange={(e) => setNewItem({ ...newItem, dropOffLocation: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Color"
-								fullWidth
-								value={newItem.color}
-								onChange={(e) => setNewItem({ ...newItem, color: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Size"
-								fullWidth
-								value={newItem.size}
-								onChange={(e) => setNewItem({ ...newItem, size: e.target.value })}
-							/>
-							<TextField
-								margin="dense"
-								label="Found Date"
-								type="date"
-								fullWidth
-								InputLabelProps={{
-									shrink: true,
-								}}
-								value={newItem.foundDate}
-								onChange={(e) => setNewItem({ ...newItem, foundDate: e.target.value })}
-							/>
-							<Input
-								type="file"
-								onChange={handleImageChange}
-								fullWidth
-								margin="dense"
-							/>
-						</DialogContent>
-						<DialogActions>
-							<Button onClick={() => setIsAddDialogOpen(false)}>Cancel</Button>
-							<Button onClick={handleaddItemUsers}>Add</Button>
-						</DialogActions>
-					</Dialog>
-				</Container>
-				<Snackbar
-					open={snackbar.open}
-					autoHideDuration={6000}
-					onClose={() => setSnackbar({ ...snackbar, open: false })}
+										</CardContent>
+									</CardActionArea>
+									<CardActions
+										sx={{
+											justifyContent: 'center',
+											p: 2,
+											mt: 'auto',
+										}}
+									>
+										{renderActionButton(item)}
+									</CardActions>
+								</Card>
+							</Grid>
+						))}
+					</Grid>
+				)}
+				<Fab
+					color="primary"
+					aria-label="add"
+					style={{ position: 'fixed', bottom: 20, right: 20 }}
+					onClick={() => setIsAddDialogOpen(true)}
 				>
-					<Alert
-						onClose={() => setSnackbar({ ...snackbar, open: false })}
-						severity={snackbar.severity}
-						sx={{ width: '100%' }}
+					<AddIcon />
+				</Fab>
+				<Dialog
+					open={isAddDialogOpen}
+					onClose={() => setIsAddDialogOpen(false)}
+				>
+					<DialogTitle>Add New Item</DialogTitle>
+					<DialogContent>
+						<TextField
+							autoFocus
+							margin="dense"
+							label="Name"
+							fullWidth
+							value={newItem.name}
+							onChange={(e) =>
+								setNewItem({ ...newItem, name: e.target.value })
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Description"
+							fullWidth
+							multiline
+							rows={3}
+							value={newItem.description}
+							onChange={(e) =>
+								setNewItem({
+									...newItem,
+									description: e.target.value,
+								})
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Found Location"
+							fullWidth
+							value={newItem.foundLocation}
+							onChange={(e) =>
+								setNewItem({
+									...newItem,
+									foundLocation: e.target.value,
+								})
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Drop-off Location"
+							fullWidth
+							value={newItem.dropOffLocation}
+							onChange={(e) =>
+								setNewItem({
+									...newItem,
+									dropOffLocation: e.target.value,
+								})
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Color"
+							fullWidth
+							value={newItem.color}
+							onChange={(e) =>
+								setNewItem({
+									...newItem,
+									color: e.target.value,
+								})
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Size"
+							fullWidth
+							value={newItem.size}
+							onChange={(e) =>
+								setNewItem({ ...newItem, size: e.target.value })
+							}
+						/>
+						<TextField
+							margin="dense"
+							label="Found Date"
+							type="date"
+							fullWidth
+							InputLabelProps={{
+								shrink: true,
+							}}
+							value={newItem.foundDate}
+							onChange={(e) =>
+								setNewItem({
+									...newItem,
+									foundDate: e.target.value,
+								})
+							}
+						/>
+						<Input
+							type="file"
+							onChange={handleImageChange}
+							fullWidth
+							margin="dense"
+						/>
+					</DialogContent>
+					<DialogActions>
+						<Button onClick={() => setIsAddDialogOpen(false)}>
+							Cancel
+						</Button>
+						<Button onClick={handleaddItemUsers}>Add</Button>
+					</DialogActions>
+				</Dialog>
+			</Container>
+			<Snackbar
+				open={snackbar.open}
+				autoHideDuration={6000}
+				onClose={() => setSnackbar({ ...snackbar, open: false })}
+			>
+				<Alert
+					onClose={() => setSnackbar({ ...snackbar, open: false })}
+					severity={snackbar.severity}
+					sx={{ width: '100%' }}
+				>
+					{snackbar.message}
+				</Alert>
+			</Snackbar>
+			<Dialog
+				open={fullImageDialog.open}
+				onClose={handleCloseFullImageDialog}
+				maxWidth="md"
+				fullWidth
+			>
+				<DialogTitle sx={{ m: 0, p: 2 }}>
+					<IconButton
+						aria-label="close"
+						onClick={handleCloseFullImageDialog}
+						sx={{
+							position: 'absolute',
+							right: 8,
+							top: 8,
+							color: (theme) => theme.palette.grey[500],
+						}}
 					>
-						{snackbar.message}
-					</Alert>
-				</Snackbar>
-			</div>
-		);
-	}
+						<CloseIcon />
+					</IconButton>
+				</DialogTitle>
+				<DialogContent>
+					{fullImageDialog.imageUrl ? (
+						<img
+							src={fullImageDialog.imageUrl}
+							alt={fullImageDialog.itemName}
+							style={{
+								width: '100%',
+								height: 'auto',
+								maxHeight: '80vh',
+								objectFit: 'contain',
+							}}
+						/>
+					) : (
+						<Typography variant="body1" align="center">
+							No image available for {fullImageDialog.itemName}
+						</Typography>
+					)}
+				</DialogContent>
+			</Dialog>
+		</div>
+	);
+}
 
-	export default UserDashboardComponent;
+export default UserDashboardComponent;

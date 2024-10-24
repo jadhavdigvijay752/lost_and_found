@@ -50,7 +50,7 @@ function RegistrationComponent() {
 
 	return (
 		<div
-			className={`${styles.loginContainer} bg-[#e7e2ff] h-screen w-screen px-[20%] py-[5%]`}
+			className={`${styles.loginContainer} bg-[#e7e2ff] min-h-screen w-screen px-[20%] py-[5%]`}
 		>
 			<div
 				className={`${styles.loginBox} overflow-hidden flex justify-center w-full bg-white rounded-3xl`}

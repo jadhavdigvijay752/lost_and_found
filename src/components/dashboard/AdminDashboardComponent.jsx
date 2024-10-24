@@ -11,7 +11,7 @@ import {
 } from '@mui/material';
 import { useItemsMutation } from '../../hooks/useItemsMutation';
 import AdminLayout from '../layout/AdminLayout';
-import { format, parseISO, isValid } from 'date-fns'; // Make sure to install date-fns if you haven't already
+import { format, parseISO, isValid } from 'date-fns';
 
 function AdminDashboardComponent() {
 	const { useItemsQuery, addItem, updateItem, deleteItem } =
@@ -27,6 +27,7 @@ function AdminDashboardComponent() {
 		message: '',
 		severity: 'info',
 	});
+	const [isSubmitting, setIsSubmitting] = useState(false);
 
 	// Add this function to format dates
 	const formatDate = (date) => {
@@ -164,6 +165,7 @@ function AdminDashboardComponent() {
 	const theme = createTheme();
 
 	const handleAddItem = async (newData) => {
+		setIsSubmitting(true);
 		try {
 			console.log('Adding new item:', newData);
 			// Convert comma-separated string to array for claimedBy
@@ -207,26 +209,36 @@ function AdminDashboardComponent() {
 				message: 'Error adding item: ' + error.message,
 				severity: 'error',
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
 	const handleUpdateItem = async (newData, oldData) => {
+		setIsSubmitting(true);
 		try {
 			console.log('Updating item:', newData);
-			// Convert comma-separated string to array for claimedBy
-			if (newData.claimedBy && typeof newData.claimedBy === 'string') {
-				newData.claimedBy = newData.claimedBy
-					.split(',')
-					.map((item) => item.trim())
-					.filter(Boolean);
-			} else if (!Array.isArray(newData.claimedBy)) {
-				newData.claimedBy = [];
-			}
-			// Ensure foundDate is a Date object
-			if (newData.foundDate && !(newData.foundDate instanceof Date)) {
-				newData.foundDate = new Date(newData.foundDate);
-			}
-			await updateItem(newData);
+			const updatedItem = {
+				...oldData,
+				...newData,
+				claimedBy: Array.isArray(newData.claimedBy)
+						? newData.claimedBy
+						: newData.claimedBy
+						? newData.claimedBy.split(',').map(item => item.trim()).filter(Boolean)
+						: [],
+				foundDate: newData.foundDate
+					? (newData.foundDate instanceof Date
+						? format(newData.foundDate, 'yyyy-MM-dd')
+						: newData.foundDate)
+					: oldData.foundDate,
+				createdAt: oldData.createdAt,
+				image: newData.image instanceof File ? newData.image : undefined
+			};
+
+			delete updatedItem.tableData;
+
+			console.log('Sending updated item:', updatedItem);
+			await updateItem(updatedItem);
 			setSnackbar({
 				open: true,
 				message: 'Item updated successfully',
@@ -239,56 +251,14 @@ function AdminDashboardComponent() {
 				message: 'Error updating item: ' + error.message,
 				severity: 'error',
 			});
+		} finally {
+			setIsSubmitting(false);
 		}
 	};
 
 	const onRowUpdate = (newData, oldData) =>
 		new Promise((resolve, reject) => {
-			console.log('Updating row:', newData);
-			console.log('Old data:', oldData);
-
-			const updatedItem = {
-				...oldData, // Start with all old data
-				...newData, // Overwrite with new data
-				foundDate: newData.foundDate
-					? typeof newData.foundDate === 'string'
-						? parseISO(newData.foundDate)
-						: newData.foundDate
-					: oldData.foundDate, // Preserve old foundDate if not changed
-				createdAt: oldData.createdAt, // Always preserve the original createdAt
-				image:
-					newData.imageUrl instanceof File
-						? newData.imageUrl
-						: undefined, // Only pass the File object if it's a new image
-			};
-
-			// Handle claimedBy field
-			if (newData.claimedBy) {
-				if (typeof newData.claimedBy === 'string') {
-					updatedItem.claimedBy = newData.claimedBy
-						.split(',')
-						.map((item) => item.trim())
-						.filter(Boolean);
-				} else if (Array.isArray(newData.claimedBy)) {
-					updatedItem.claimedBy = newData.claimedBy;
-				} else {
-					updatedItem.claimedBy = [];
-				}
-			} else {
-				updatedItem.claimedBy = [];
-			}
-
-			// Remove the tableData property as it's not needed for the update
-			delete updatedItem.tableData;
-
-			// If foundDate is still null after the update, and oldData had a foundDate, preserve the old foundDate
-			if (updatedItem.foundDate === null && oldData.foundDate) {
-				updatedItem.foundDate = oldData.foundDate;
-			}
-
-			console.log('Sending updated item:', updatedItem);
-
-			updateItem(updatedItem)
+			handleUpdateItem(newData, oldData)
 				.then(() => {
 					console.log('Update successful');
 					resolve();
@@ -394,10 +364,26 @@ function AdminDashboardComponent() {
 											style={{ maxHeight: '100%' }}
 										/>
 									),
+									OverlayLoading: props => (
+										<div style={{
+											display: 'flex',
+											justifyContent: 'center',
+											alignItems: 'center',
+											height: '100%',
+											width: '100%',
+											position: 'absolute',
+											top: 0,
+											left: 0,
+											backgroundColor: 'rgba(255, 255, 255, 0.7)',
+										}}>
+											<CircularProgress />
+										</div>
+									),
 								}}
 								style={{
 									width: '100%',
 								}}
+								isLoading={isSubmitting}
 							/>
 						)}
 					</Paper>

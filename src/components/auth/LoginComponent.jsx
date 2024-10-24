@@ -14,9 +14,9 @@ function LoginComponent() {
 		loginMutation.mutate({ email, password, isGoogleSignIn: false });
 	};
 
-	const handleGoogleSignIn = () => {
-		loginMutation.mutate({ isGoogleSignIn: true });
-	};
+	// const handleGoogleSignIn = () => {
+	// 	loginMutation.mutate({ isGoogleSignIn: true });
+	// };
 
 	return (
 		<div
@@ -180,7 +180,7 @@ function LoginComponent() {
 							</p>
 						)}
 					</Box>
-					<p className="font-poppins text-base leading-6 text-[#1C1C1C] mt-8 mb-4">
+					{/* <p className="font-poppins text-base leading-6 text-[#1C1C1C] mt-8 mb-4">
 						<span className='font-bold'>Login</span> with Others
 					</p>
 					<button
@@ -203,7 +203,7 @@ function LoginComponent() {
 							className="w-5 h-5 mr-2"
 						/>
 						Login with Google
-					</button>
+					</button> */}
 					<p className="font-poppins font-normal text-base leading-6 text-[#525252] mt-4">
 						Don't have an account?{' '}
 						<Link

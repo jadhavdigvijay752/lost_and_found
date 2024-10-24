@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
-import { TextField, Button, Box, InputAdornment } from '@mui/material';
-import { Email, Lock, Person } from '@mui/icons-material';
+import {
+	TextField,
+	Button,
+	Box,
+	InputAdornment,
+	MenuItem,
+} from '@mui/material';
+import { Email, Lock, Person, School } from '@mui/icons-material';
 import { Link, useNavigate } from 'react-router-dom';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../firebase/firebase';
@@ -10,6 +16,7 @@ function RegistrationComponent() {
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
+	const [school, setSchool] = useState('');
 	const [error, setError] = useState('');
 	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
@@ -25,9 +32,12 @@ function RegistrationComponent() {
 				email,
 				password
 			);
-			await updateProfile(userCredential.user, { displayName: fullName });
+			await updateProfile(userCredential.user, {
+				displayName: fullName,
+				// You can add the school to the user profile if needed
+				// photoURL: JSON.stringify({ school: school })
+			});
 			console.log('Registration successful', userCredential.user);
-			// Navigate to /app after successful registration
 			navigate('/app');
 		} catch (error) {
 			setError(error.message);
@@ -35,6 +45,8 @@ function RegistrationComponent() {
 			setLoading(false);
 		}
 	};
+
+	const schools = ['School A', 'School B', 'School C', 'School D'];
 
 	return (
 		<div
@@ -174,6 +186,59 @@ function RegistrationComponent() {
 								},
 							}}
 						/>
+						<TextField
+							select
+							variant="filled"
+							margin="normal"
+							required
+							fullWidth
+							id="school"
+							name="school"
+							value={school}
+							onChange={(e) => setSchool(e.target.value)}
+							InputProps={{
+								startAdornment: (
+									<InputAdornment position="start">
+										<School />
+									</InputAdornment>
+								),
+							}}
+							SelectProps={{
+								displayEmpty: true,
+								renderValue: (value) =>
+									value || 'Select School',
+							}}
+							sx={{
+								'& .MuiInputBase-root': {
+									backgroundColor: 'rgba(240, 237, 255, 0.8)',
+									borderRadius: '15px',
+									border: 'none',
+									color: 'black',
+									fontSize: '14px',
+									'& fieldset': { border: 'none' },
+									'&::before': { content: 'none' },
+									'&::after': { content: 'none' },
+								},
+								'& .MuiSelect-select.MuiSelect-filled.MuiInputBase-input.MuiFilledInput-input':
+									{
+										textAlign: 'left', // Align text to the left
+										paddingTop: '16px',
+										paddingBottom: '12px',
+									},
+								'& .MuiInputAdornment-root': {
+									marginRight: '8px', // Adjust spacing between icon and text
+								},
+							}}
+						>
+							<MenuItem value="" disabled>
+								Select School
+							</MenuItem>
+							{schools.map((option) => (
+								<MenuItem key={option} value={option}>
+									{option}
+								</MenuItem>
+							))}
+						</TextField>
 						<Button
 							type="submit"
 							fullWidth

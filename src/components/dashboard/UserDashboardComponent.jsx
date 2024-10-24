@@ -368,13 +368,13 @@ function UserDashboardComponent() {
 					}}
 				>
 					<Typography variant="h5" gutterBottom align="center" sx={{ color: 'white', fontWeight: 'bold' }}>
-						How It Works
+						Lost it? Look No Further!
 					</Typography>
 					<Stepper activeStep={-1} alternativeLabel>
 						{steps.map((step, index) => (
 							<Step key={step.label}>
 								<StepLabel icon={step.icon}>
-									<Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 'bold' }}>{step.label}</Typography>
+									<Typography variant="subtitle1" sx={{ color: 'white', fontWeight: 'bold', fontSize: '17px' }}>{step.label}</Typography>
 									<Typography variant="body2" sx={{ color: 'white' }}>
 										{step.description}
 									</Typography>

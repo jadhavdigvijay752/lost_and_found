@@ -8,7 +8,6 @@ import {
 	deleteDoc,
 	serverTimestamp,
 	arrayUnion,
-	arrayRemove,
 	getDoc,
 } from 'firebase/firestore';
 import { ref, uploadBytes, getDownloadURL, deleteObject } from 'firebase/storage';
@@ -16,9 +15,21 @@ import { db, storage } from '../firebase/firebase';
 import { parseISO, isValid } from 'date-fns';
 import { Timestamp } from 'firebase/firestore';
 
+/**
+ * Custom React hook that provides item-related mutations and queries.
+ *
+ * @returns {Object} An object containing functions for querying and mutating items.
+ */
 export const useItemsMutation = () => {
 	const queryClient = useQueryClient();
 
+	/**
+	 * Fetches items from the Firestore database.
+	 *
+	 * @async
+	 * @function
+	 * @returns {Promise<Array>} A promise that resolves to an array of items.
+	 */
 	const fetchItems = async () => {
 		try {
 			const querySnapshot = await getDocs(collection(db, 'items'));
@@ -36,12 +47,25 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	/**
+	 * React Query hook for fetching items.
+	 *
+	 * @returns {Object} The query object containing the items data and status.
+	 */
 	const useItemsQuery = () => useQuery({
 		queryKey: ['items'],
 		queryFn: fetchItems,
 		refetchOnWindowFocus: false,
 	});
 
+	/**
+	 * Uploads an image to Firebase Storage.
+	 *
+	 * @async
+	 * @function
+	 * @param {File} file - The image file to upload.
+	 * @returns {Promise<string|null>} A promise that resolves to the image URL or null if no file is provided.
+	 */
 	const uploadImage = async (file) => {
 		if (!file) return null;
 		try {
@@ -57,6 +81,14 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	/**
+	 * Deletes an image from Firebase Storage.
+	 *
+	 * @async
+	 * @function
+	 * @param {string} imageUrl - The URL of the image to delete.
+	 * @returns {Promise<void>}
+	 */
 	const deleteImage = async (imageUrl) => {
 		if (!imageUrl) return;
 		try {
@@ -69,6 +101,14 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	/**
+	 * Adds a new item to the Firestore database.
+	 *
+	 * @async
+	 * @function
+	 * @param {Object} newItem - The new item data.
+	 * @returns {Promise<string>} A promise that resolves to the ID of the added item.
+	 */
 	const addItem = async (newItem) => {
 		try {
 			console.log('Adding new item:', newItem);
@@ -91,7 +131,16 @@ export const useItemsMutation = () => {
 			throw error;
 		}
 	};
-  const addItemUsers = async (formData) => {
+
+	/**
+	 * Adds a new item to the Firestore database using form data.
+	 *
+	 * @async
+	 * @function
+	 * @param {FormData} formData - The form data containing the new item information.
+	 * @returns {Promise<string>} A promise that resolves to the ID of the added item.
+	 */
+	const addItemUsers = async (formData) => {
 		try {
 			const newItem = Object.fromEntries(formData.entries());
 			
@@ -119,6 +168,9 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	/**
+	 * Mutation for claiming an item.
+	 */
 	const claimItem = useMutation({
 		mutationFn: async ({ itemId, username }) => {
 			const itemRef = doc(db, 'items', itemId);
@@ -131,6 +183,9 @@ export const useItemsMutation = () => {
 		},
 	});
 
+	/**
+	 * Mutation for unclaiming an item.
+	 */
 	const unclaimItem = useMutation({
 		mutationFn: async ({ itemId, username }) => {
 			const itemRef = doc(db, 'items', itemId);
@@ -152,6 +207,14 @@ export const useItemsMutation = () => {
 		},
 	});
 
+	/**
+	 * Updates an existing item in the Firestore database.
+	 *
+	 * @async
+	 * @function
+	 * @param {Object} updatedItem - The updated item data.
+	 * @returns {Promise<void>}
+	 */
 	const updateItem = async (updatedItem) => {
 		try {
 			console.log('Updating item:', updatedItem);
@@ -232,6 +295,14 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	/**
+	 * Deletes an item from the Firestore database.
+	 *
+	 * @async
+	 * @function
+	 * @param {string} itemId - The ID of the item to delete.
+	 * @returns {Promise<void>}
+	 */
 	const deleteItem = async (itemId) => {
 		try {
 			const itemDoc = await getDoc(doc(db, 'items', itemId));
@@ -248,6 +319,7 @@ export const useItemsMutation = () => {
 		}
 	};
 
+	// Mutations for adding, updating, and deleting items
 	const addItemMutation = useMutation({
 		mutationFn: addItem,
 		onSuccess: () => {
@@ -255,7 +327,7 @@ export const useItemsMutation = () => {
 		},
 	});
 
-  const addItemUsersMutation = useMutation({
+	const addItemUsersMutation = useMutation({
 		mutationFn: addItemUsers,
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['items'] });
@@ -279,7 +351,7 @@ export const useItemsMutation = () => {
 	return {
 		useItemsQuery,
 		addItem: addItemMutation.mutate,
-    addItemUsers: addItemUsersMutation.mutate,
+		addItemUsers: addItemUsersMutation.mutate,
 		updateItem: updateItemMutation.mutate,
 		deleteItem: deleteItemMutation.mutate,
 		claimItem: claimItem.mutate,

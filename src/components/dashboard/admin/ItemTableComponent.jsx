@@ -1,56 +1,39 @@
 import React, { useState } from 'react';
 import MaterialTable from '@material-table/core';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
 import {
 	Paper,
-	Snackbar,
-	Alert,
 	Checkbox,
 	CircularProgress,
+	Snackbar,
+	Alert,
 } from '@mui/material';
-import { useItemsMutation } from '../../hooks/useItemsMutation';
-import AdminLayout from '../layout/AdminLayout';
+import { formatDate } from '../../../utilities/CommanFunctions';
 import { format, parseISO, isValid } from 'date-fns';
 
-function AdminDashboardComponent() {
-	const { useItemsQuery, addItem, updateItem, deleteItem } =
-		useItemsMutation();
-	const {
-		data: items = [],
-		isLoading,
-		isFetching,
-		isError,
-	} = useItemsQuery();
+/**
+ * Component for displaying and managing items in a table.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {Array} props.items - The list of items to display.
+ * @param {Function} props.addItem - Function to add a new item.
+ * @param {Function} props.updateItem - Function to update an existing item.
+ * @param {Function} props.deleteItem - Function to delete an item.
+ * @returns {JSX.Element} The rendered ItemTableComponent.
+ */
+function ItemTableComponent({ items, addItem, updateItem, deleteItem }) {
 	const [snackbar, setSnackbar] = useState({
 		open: false,
 		message: '',
 		severity: 'info',
 	});
 	const [isSubmitting, setIsSubmitting] = useState(false);
-
-	// Add this function to format dates
-	const formatDate = (date) => {
-		if (!date) return '';
-		if (date instanceof Date) {
-			return format(date, 'yyyy-MM-dd');
-		}
-		if (typeof date === 'object' && date.seconds) {
-			// Firestore Timestamp
-			return format(new Date(date.seconds * 1000), 'yyyy-MM-dd');
-		}
-		try {
-			return format(parseISO(date), 'yyyy-MM-dd');
-		} catch {
-			return 'Invalid Date';
-		}
-	};
-
 	const columns = [
 		{ title: 'Name', field: 'name' },
 		{ title: 'Description', field: 'description' },
 		{ title: 'Color', field: 'color' },
 		{ title: 'Size', field: 'size' },
-		{ title: 'Found Location', field: 'foundLocation' },
+		{ title: 'Location Found', field: 'foundLocation' },
 		{ title: 'Drop-off Location', field: 'dropOffLocation' },
 		{
 			title: 'Claimed By',
@@ -162,8 +145,14 @@ function AdminDashboardComponent() {
 		},
 	];
 
-	const theme = createTheme();
-
+	/**
+	 * Handles adding a new item.
+	 *
+	 * @async
+	 * @function
+	 * @param {Object} newData - The new item data.
+	 * @returns {Promise<void>}
+	 */
 	const handleAddItem = async (newData) => {
 		setIsSubmitting(true);
 		try {
@@ -214,6 +203,15 @@ function AdminDashboardComponent() {
 		}
 	};
 
+	/**
+	 * Handles updating an existing item.
+	 *
+	 * @async
+	 * @function
+	 * @param {Object} newData - The updated item data.
+	 * @param {Object} oldData - The original item data.
+	 * @returns {Promise<void>}
+	 */
 	const handleUpdateItem = async (newData, oldData) => {
 		setIsSubmitting(true);
 		try {
@@ -260,6 +258,14 @@ function AdminDashboardComponent() {
 		}
 	};
 
+	/**
+	 * Handles row update in the table.
+	 *
+	 * @function
+	 * @param {Object} newData - The updated item data.
+	 * @param {Object} oldData - The original item data.
+	 * @returns {Promise<void>}
+	 */
 	const onRowUpdate = (newData, oldData) =>
 		new Promise((resolve, reject) => {
 			handleUpdateItem(newData, oldData)
@@ -274,143 +280,104 @@ function AdminDashboardComponent() {
 		});
 
 	return (
-		<AdminLayout>
-			<ThemeProvider theme={theme}>
-				<div
-					style={{
-						padding: '20px',
-						maxWidth: '95vw',
-						overflow: 'auto',
-						margin: '0 auto',
-					}}
-				>
-					<Paper>
-						{isLoading || isFetching ? (
-							<div
-								style={{
-									display: 'flex',
-									justifyContent: 'center',
-									alignItems: 'center',
-								}}
-							>
-								<CircularProgress />
-							</div>
-						) : (
-							<MaterialTable
-								title="Item List"
-								columns={columns}
-								data={items}
-								editable={{
-									onRowAdd: handleAddItem,
-									onRowUpdate: onRowUpdate,
-									onRowDelete: (oldData) =>
-										new Promise((resolve, reject) => {
-											deleteItem(oldData.id)
-												.then(() => {
-													setSnackbar({
-														open: true,
-														message:
-															'Item deleted successfully',
-														severity: 'success',
-													});
-													resolve();
-												})
-												.catch((error) => {
-													console.error(
-														'Error deleting item:',
-														error
-													);
-													setSnackbar({
-														open: true,
-														message:
-															'Error deleting item: ' +
-															error.message,
-														severity: 'error',
-													});
-													reject();
-												});
-										}),
-								}}
-								options={{
-									addRowPosition: 'first',
-									actionsColumnIndex: -1,
-									pageSize: 10,
-									pageSizeOptions: [5, 10, 20],
-									tableLayout: 'auto',
-									headerStyle: {
-										backgroundColor: '#f5f5f5',
-										color: '#333',
-										padding: '12px 16px',
-										fontFamily:
-											"ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
-										fontWeight: 'bold',
-										whiteSpace: 'nowrap',
-									},
-									rowStyle: (rowData, index) => ({
-										backgroundColor:
-											index % 2 === 0
-												? '#fff'
-												: '#f9f9f9',
-										transition: 'background-color 0.3s',
-										'&:hover': {
-											backgroundColor: '#e8f4fd',
-										},
-									}),
-									cellStyle: {
-										whiteSpace: 'nowrap',
-										padding: '8px 16px',
-									},
-									maxBodyHeight: '61.3vh', // Set max body height to restrict content scrolling
-								}}
-								components={{
-									Container: (props) => (
-										<div
-											{...props}
-											style={{ maxHeight: '100%' }}
-										/>
-									),
-									OverlayLoading: (props) => (
-										<div
-											style={{
-												display: 'flex',
-												justifyContent: 'center',
-												alignItems: 'center',
-												height: '100%',
-												width: '100%',
-												position: 'absolute',
-												top: 0,
-												left: 0,
-												backgroundColor:
-													'rgba(255, 255, 255, 0.7)',
-											}}
-										>
-											<CircularProgress />
-										</div>
-									),
-								}}
-								isLoading={isSubmitting}
-							/>
-						)}
-					</Paper>
-				</div>
-				<Snackbar
-					open={snackbar.open}
-					autoHideDuration={6000}
+		<Paper>
+			<MaterialTable
+				title="Item List"
+				columns={columns}
+				data={items}
+				editable={{
+					onRowAdd: handleAddItem,
+					onRowUpdate: onRowUpdate,
+					onRowDelete: (oldData) =>
+						new Promise((resolve, reject) => {
+							deleteItem(oldData.id)
+								.then(() => {
+									setSnackbar({
+										open: true,
+										message: 'Item deleted successfully',
+										severity: 'success',
+									});
+									resolve();
+								})
+								.catch((error) => {
+									setSnackbar({
+										open: true,
+										message:
+											'Error deleting item: ' +
+											error.message,
+										severity: 'error',
+									});
+									reject();
+								});
+						}),
+				}}
+				options={{
+					addRowPosition: 'first',
+					actionsColumnIndex: -1,
+					pageSize: 10,
+					pageSizeOptions: [5, 10, 20],
+					tableLayout: 'auto',
+					headerStyle: {
+						backgroundColor: '#f5f5f5',
+						color: '#333',
+						padding: '12px 16px',
+						fontFamily:
+							"ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji'",
+						fontWeight: 'bold',
+						whiteSpace: 'nowrap',
+					},
+					rowStyle: (rowData, index) => ({
+						backgroundColor: index % 2 === 0 ? '#fff' : '#f9f9f9',
+						transition: 'background-color 0.3s',
+						'&:hover': {
+							backgroundColor: '#e8f4fd',
+						},
+					}),
+					cellStyle: {
+						whiteSpace: 'nowrap',
+						padding: '8px 16px',
+					},
+					maxBodyHeight: '63vh', // Set max body height to restrict content scrolling
+				}}
+				components={{
+					Container: (props) => (
+						<div {...props} style={{ maxHeight: '100%' }} />
+					),
+					OverlayLoading: (props) => (
+						<div
+							style={{
+								display: 'flex',
+								justifyContent: 'center',
+								alignItems: 'center',
+								height: '100%',
+								width: '100%',
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								backgroundColor: 'rgba(255, 255, 255, 0.7)',
+							}}
+						>
+							<CircularProgress />
+						</div>
+					),
+				}}
+				isLoading={isSubmitting}
+			/>
+			<Snackbar
+				open={snackbar.open}
+				autoHideDuration={6000}
+				onClose={() => setSnackbar({ ...snackbar, open: false })}
+			>
+				<Alert
 					onClose={() => setSnackbar({ ...snackbar, open: false })}
+					severity={snackbar.severity}
+					sx={{ width: '100%' }}
 				>
-					<Alert
-						onClose={() =>
-							setSnackbar({ ...snackbar, open: false })
-						}
-						severity={snackbar.severity}
-						sx={{ width: '100%' }}
-					>
-						{snackbar.message}
-					</Alert>
-				</Snackbar>
-			</ThemeProvider>
-		</AdminLayout>
+					{snackbar.message}
+				</Alert>
+			</Snackbar>
+		</Paper>
 	);
 }
 
-export default AdminDashboardComponent;
+export default ItemTableComponent;

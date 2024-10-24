@@ -3,6 +3,10 @@ import { getFirestore } from 'firebase/firestore';
 import { getStorage } from 'firebase/storage';
 import { getAuth } from 'firebase/auth';
 
+/**
+ * Firebase configuration object containing keys and identifiers for your app.
+ * @type {Object}
+ */
 const firebaseConfig = {
 	apiKey: 'AIzaSyD_6SQvB2rAMxt7XwjFnnp-wNXkPfQ18a8',
 	authDomain: 'claimit-campus.firebaseapp.com',
@@ -13,16 +17,28 @@ const firebaseConfig = {
 	measurementId: 'G-D3EWGBYSDM',
 };
 
-// Initialize Firebase
+/**
+ * Initialize Firebase app with the provided configuration.
+ * @type {FirebaseApp}
+ */
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firestore
+/**
+ * Firestore database instance for the initialized app.
+ * @type {Firestore}
+ */
 const db = getFirestore(app);
 
-// Initialize Storage
+/**
+ * Firebase storage instance for the initialized app.
+ * @type {FirebaseStorage}
+ */
 const storage = getStorage(app);
 
-// Initialize Auth
+/**
+ * Firebase authentication instance for the initialized app.
+ * @type {Auth}
+ */
 const auth = getAuth(app);
 
 export { db, storage, auth };

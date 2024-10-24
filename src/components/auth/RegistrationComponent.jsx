@@ -12,6 +12,13 @@ import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { auth } from '../../firebase/firebase';
 import styles from '../../styles/login.module.css';
 
+/**
+ * RegistrationComponent is a React component that renders a registration form.
+ * It allows users to enter their full name, email, password, and select a school to register.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered registration component.
+ */
 function RegistrationComponent() {
 	const [fullName, setFullName] = useState('');
 	const [email, setEmail] = useState('');
@@ -21,6 +28,14 @@ function RegistrationComponent() {
 	const [loading, setLoading] = useState(false);
 	const navigate = useNavigate();
 
+	/**
+	 * Handles the form submission for registration.
+	 *
+	 * @async
+	 * @function
+	 * @param {Event} e - The form submission event.
+	 * @returns {Promise<void>}
+	 */
 	const handleSubmit = async (e) => {
 		e.preventDefault();
 		setError('');

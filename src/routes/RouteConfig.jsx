@@ -14,6 +14,14 @@ import { useAuth } from '../hooks/useAuth'; // Import the useAuth hook
 // Import other components as needed
 
 // ProtectedRoute component
+/**
+ * ProtectedRoute component that checks user authentication and redirects accordingly.
+ * 
+ * @component
+ * @param {Object} props - The component props.
+ * @param {React.ReactNode} props.children - The child components to render if access is granted.
+ * @returns {JSX.Element} The rendered component or a redirect.
+ */
 const ProtectedRoute = ({ children }) => {
 	const { user, loading } = useAuth();
 
@@ -85,6 +93,12 @@ const queryClient = new QueryClient();
 const theme = createTheme();
 
 // Main component for the application that provides QueryClient, Theme, and Router
+/**
+ * Main component for the application that provides QueryClient, Theme, and Router.
+ * 
+ * @component
+ * @returns {JSX.Element} The rendered application with providers.
+ */
 function RouteConfig() {
 	return (
 		<QueryClientProvider client={queryClient}>

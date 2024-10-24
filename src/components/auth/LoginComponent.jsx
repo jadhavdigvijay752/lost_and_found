@@ -1,14 +1,26 @@
 import React, { useState } from 'react';
 import { TextField, Button, Box } from '@mui/material';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import useLoginMutation from '../../hooks/useLoginMutation';
 import styles from '../../styles/login.module.css';
 
+/**
+ * LoginComponent is a React component that renders a login form.
+ * It allows users to enter their email and password to log in.
+ *
+ * @component
+ * @returns {JSX.Element} The rendered login component.
+ */
 function LoginComponent() {
 	const [email, setEmail] = useState('');
 	const [password, setPassword] = useState('');
 	const loginMutation = useLoginMutation();
 
+	/**
+	 * Handles the form submission for logging in.
+	 *
+	 * @param {Event} e - The form submission event.
+	 */
 	const handleSubmit = (e) => {
 		e.preventDefault();
 		loginMutation.mutate({ email, password, isGoogleSignIn: false });

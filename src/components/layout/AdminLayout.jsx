@@ -72,6 +72,15 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 	justifyContent: 'flex-end',
 }));
 
+/**
+ * AdminLayout is a React component that provides a layout for admin pages.
+ * It includes a persistent drawer for navigation and an app bar with user information.
+ *
+ * @component
+ * @param {Object} props - The component props.
+ * @param {React.ReactNode} props.children - The content to be displayed within the layout.
+ * @returns {JSX.Element} The rendered AdminLayout component.
+ */
 export default function AdminLayout({ children }) {
 	const theme = useTheme();
 	const [open, setOpen] = useState(false);
@@ -91,14 +100,27 @@ export default function AdminLayout({ children }) {
 	const displayName =
 		user?.displayName || userData?.displayName || user?.email || 'Admin';
 
+	/**
+	 * Opens the drawer.
+	 */
 	const handleDrawerOpen = () => {
 		setOpen(true);
 	};
 
+	/**
+	 * Closes the drawer.
+	 */
 	const handleDrawerClose = () => {
 		setOpen(false);
 	};
 
+	/**
+	 * Logs out the current user and navigates to the login page.
+	 *
+	 * @async
+	 * @function
+	 * @returns {Promise<void>}
+	 */
 	const handleLogout = async () => {
 		try {
 			await logout();

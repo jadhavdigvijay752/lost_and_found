@@ -1,20 +1,20 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getStorage } from 'firebase/storage';
-import { getAuth } from 'firebase/auth';
+import { initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
+import { getAuth } from "firebase/auth";
 
 /**
  * Firebase configuration object containing keys and identifiers for your app.
  * @type {Object}
  */
 const firebaseConfig = {
-	apiKey: 'AIzaSyD_6SQvB2rAMxt7XwjFnnp-wNXkPfQ18a8',
-	authDomain: 'claimit-campus.firebaseapp.com',
-	projectId: 'claimit-campus',
-	storageBucket: 'claimit-campus.appspot.com',
-	messagingSenderId: '18127767164',
-	appId: '1:18127767164:web:72b9fb4804a2c8fc282bf9',
-	measurementId: 'G-D3EWGBYSDM',
+  apiKey: "AIzaSyD_6SQvB2rAMxt7XwjFnnp-wNXkPfQ18a8",
+  authDomain: "claimit-campus.firebaseapp.com",
+  projectId: "claimit-campus",
+  storageBucket: "claimit-campus.appspot.com",
+  messagingSenderId: "18127767164",
+  appId: "1:18127767164:web:72b9fb4804a2c8fc282bf9",
+  measurementId: "G-D3EWGBYSDM",
 };
 
 /**
